@@ -11,7 +11,7 @@ Auto-sync chezmoi dotfiles to git remote.
 ## Install
 
 ```bash
-git clone https://github.com/williavs/omarchy-dotfiles-sync
+git clone https://github.com/WillyV3/omarchy-dotfiles-sync
 cd omarchy-dotfiles-sync
 ./setup
 ```
