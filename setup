@@ -1,0 +1,43 @@
+#!/bin/bash
+#
+# setup
+# Installs dotfiles-sync daemon.
+# Run: ./setup
+
+set -euo pipefail
+
+BIN_DIR="$HOME/.local/bin"
+SERVICE_DIR="$HOME/.config/systemd/user"
+
+command -v chezmoi >/dev/null || {
+    echo "chezmoi not found. Install:"
+    echo "  sh -c \"\$(curl -fsLS get.chezmoi.io)\" -- -b ~/.local/bin"
+    exit 1
+}
+
+command -v inotifywait >/dev/null || {
+    echo "inotify-tools not found. Install:"
+    echo "  sudo pacman -S inotify-tools"
+    exit 1
+}
+
+[ -d "$HOME/.local/share/chezmoi/.git" ] || {
+    echo "chezmoi not initialized. Run:"
+    echo "  chezmoi init"
+    exit 1
+}
+
+mkdir -p "$BIN_DIR" "$SERVICE_DIR"
+
+cp dotfiles-sync "$BIN_DIR/"
+chmod +x "$BIN_DIR/dotfiles-sync"
+
+cp dotfiles-sync.service "$SERVICE_DIR/"
+
+systemctl --user daemon-reload
+systemctl --user enable dotfiles-sync
+systemctl --user start dotfiles-sync
+
+echo "Installed. Check status:"
+echo "  systemctl --user status dotfiles-sync"
+echo "  tail ~/.local/state/dotfiles-sync.log"
