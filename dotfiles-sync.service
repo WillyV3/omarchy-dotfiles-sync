@@ -1,13 +1,14 @@
 [Unit]
 Description=Dotfiles auto-sync daemon
-After=network.target
+After=network-online.target
 
 [Service]
 Type=simple
 ExecStart=%h/.local/bin/dotfiles-sync
 Restart=on-failure
-RestartSec=5
-Environment="DEBOUNCE=60"
+RestartSec=30
+# For desktop notifications on Wayland (adjust WAYLAND_DISPLAY if needed)
+Environment="DISPLAY=:0" "WAYLAND_DISPLAY=wayland-1" "XDG_RUNTIME_DIR=/run/user/1000"
 
 [Install]
 WantedBy=default.target

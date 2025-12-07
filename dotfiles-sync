@@ -1,10 +1,8 @@
 #!/bin/bash
 #
 # dotfiles-sync
-# Watches source files, syncs changes to chezmoi, pushes to git remote.
-# Requires: inotify-tools, git, chezmoi, libnotify (optional)
-
-set -uo pipefail
+# Polls for changes, syncs to chezmoi, pushes to git remote.
+# Requires: git, chezmoi, libnotify (optional for notifications)
 
 CHEZMOI_DIR="${CHEZMOI_DIR:-$HOME/.local/share/chezmoi}"
 LOG_FILE="${LOG_FILE:-$HOME/.local/state/dotfiles-sync.log}"
@@ -46,19 +44,11 @@ sync_changes() {
     }
 }
 
+# Initial sync on startup
 sync_changes
 
-# Build watch list: chezmoi dir + all tracked source directories
-WATCH_DIRS="$CHEZMOI_DIR"
-while read -r dir; do
-    [ -d "$HOME/$dir" ] && WATCH_DIRS="$WATCH_DIRS $HOME/$dir"
-done < <(chezmoi managed --include=dirs)
-
-# Watch with proper debouncing
+# Poll every DEBOUNCE seconds
 while true; do
-    inotifywait -r -q -e modify,create,delete,move $WATCH_DIRS \
-        --exclude '\.git|node_modules|__pycache__|\.cache' 2>/dev/null
-    while inotifywait -r -q -t "$DEBOUNCE" -e modify,create,delete,move $WATCH_DIRS \
-        --exclude '\.git|node_modules|__pycache__|\.cache' 2>/dev/null; do :; done
+    sleep "$DEBOUNCE"
     sync_changes
 done

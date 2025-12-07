@@ -1,18 +1,17 @@
 # omarchy-dotfiles-sync
 
-Auto-sync chezmoi dotfiles to git remote. Watches source files, auto-adds new files, sends desktop notification on sync.
+Auto-sync chezmoi dotfiles to git remote. Polls for changes, auto-adds new files, sends desktop notification on sync.
 
 ## Features
 
-- Watches **source files** (not just chezmoi dir) - edit `~/.config/hypr/bindings.conf`, it syncs
+- **Polls every 60s** (configurable) - checks for changes and syncs
 - **Auto-adds** new files in tracked directories
-- **60s debounce** - waits for quiet period before syncing
 - **Desktop notification** via libnotify on successful push
 - Uses `chezmoi re-add` for efficient updates
 
 ## Requirements
 
-- Omarchy (or Arch with inotify-tools)
+- Arch Linux (or similar)
 - chezmoi with git remote configured
 - libnotify (optional, for notifications)
 
@@ -26,19 +25,23 @@ cd omarchy-dotfiles-sync
 
 ## How it works
 
-1. Watches all tracked source directories + chezmoi dir
-2. On file change, waits 60s for more changes (debounce)
-3. Runs `chezmoi re-add` to sync modified files
-4. Auto-adds new files in tracked directories
-5. Commits and pushes to remote
-6. Shows desktop notification on success
+1. Runs `chezmoi re-add` to sync modified files
+2. Auto-adds new files in tracked directories via `chezmoi unmanaged`
+3. Commits and pushes to remote if changes exist
+4. Shows desktop notification on success
+5. Repeats every 60 seconds
 
 ## Configuration
 
 Edit `~/.config/systemd/user/dotfiles-sync.service`:
 
 ```ini
-Environment="DEBOUNCE=60"  # seconds to wait after last change
+Environment="DEBOUNCE=60"  # seconds between sync checks
+```
+
+For notifications on Wayland, ensure these are set (adjust as needed):
+```ini
+Environment="DISPLAY=:0" "WAYLAND_DISPLAY=wayland-1" "XDG_RUNTIME_DIR=/run/user/1000"
 ```
 
 Then reload:
@@ -61,7 +64,7 @@ tail -f ~/.local/state/dotfiles-sync.log # watch logs
 Add patterns to `~/.local/share/chezmoi/.chezmoiignore`:
 
 ```
-# Claude Code state (don't track)
+# Example: ignore Claude Code state files
 .claude/history.jsonl
 .claude/todos/
 .claude/debug/
